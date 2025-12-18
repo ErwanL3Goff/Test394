@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Paint en JavaScript</title>
+    <title>Paint JavaScript Avancé</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -14,182 +14,257 @@
         }
         
         body {
-            background-color: #f0f0f0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             display: flex;
             flex-direction: column;
             height: 100vh;
             overflow: hidden;
         }
         
-        /* Barre de titre */
         .title-bar {
-            background-color: #2c3e50;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
             color: white;
-            padding: 10px 20px;
+            padding: 15px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
         
         .title-bar h1 {
             font-size: 1.5rem;
-            font-weight: 500;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
         
-        /* Barre d'outils principale */
+        .title-bar h1 i {
+            animation: rotate 3s linear infinite;
+        }
+        
+        @keyframes rotate {
+            0%, 90% { transform: rotate(0deg); }
+            95% { transform: rotate(-10deg); }
+            100% { transform: rotate(0deg); }
+        }
+        
         .toolbar {
-            background-color: #34495e;
-            padding: 8px 15px;
+            background: rgba(44, 62, 80, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 10px 15px;
             display: flex;
             flex-wrap: wrap;
             align-items: center;
-            gap: 10px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            gap: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
         }
         
         .tool-group {
             display: flex;
             align-items: center;
-            gap: 5px;
-            padding: 5px 10px;
-            background-color: rgba(255,255,255,0.1);
-            border-radius: 4px;
+            gap: 8px;
+            padding: 8px 12px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+        
+        .tool-group:hover {
+            background: rgba(255,255,255,0.15);
+            transform: translateY(-2px);
         }
         
         .tool-btn, .color-btn, .size-btn {
-            background-color: #4a6278;
+            background: linear-gradient(135deg, #4a6278 0%, #3d5266 100%);
             color: white;
             border: none;
-            width: 40px;
-            height: 40px;
-            border-radius: 4px;
+            width: 45px;
+            height: 45px;
+            border-radius: 8px;
             cursor: pointer;
             display: flex;
             justify-content: center;
             align-items: center;
-            transition: all 0.2s;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .tool-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .tool-btn:hover::before {
+            width: 100px;
+            height: 100px;
         }
         
         .tool-btn:hover, .color-btn:hover, .size-btn:hover {
-            background-color: #5d7a95;
-            transform: translateY(-2px);
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
         
         .tool-btn.active {
-            background-color: #1abc9c;
-            box-shadow: 0 0 0 2px #16a085;
+            background: linear-gradient(135deg, #1abc9c 0%, #16a085 100%);
+            box-shadow: 0 0 0 3px rgba(26, 188, 156, 0.3);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 3px rgba(26, 188, 156, 0.3); }
+            50% { box-shadow: 0 0 0 6px rgba(26, 188, 156, 0.5); }
         }
         
         .color-btn {
-            width: 30px;
-            height: 30px;
+            width: 35px;
+            height: 35px;
             border-radius: 50%;
-            padding: 0;
+            border: 3px solid transparent;
+            transition: all 0.3s;
         }
         
         .color-btn.active {
-            box-shadow: 0 0 0 3px white, 0 0 0 5px #3498db;
+            border-color: white;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.5), 0 0 15px rgba(52, 152, 219, 0.3);
         }
         
         #colorPicker {
-            width: 40px;
-            height: 40px;
+            width: 45px;
+            height: 45px;
             border: none;
+            border-radius: 8px;
             background: transparent;
             cursor: pointer;
         }
         
-        /* Barre d'options */
         .options-bar {
-            background-color: #ecf0f1;
-            padding: 10px 20px;
+            background: linear-gradient(135deg, #ecf0f1 0%, #dfe6e9 100%);
+            padding: 12px 20px;
             display: flex;
             align-items: center;
-            gap: 15px;
-            border-bottom: 1px solid #d5dbdb;
+            gap: 20px;
+            border-bottom: 2px solid #bdc3c7;
+            flex-wrap: wrap;
         }
         
-        /* Zone de dessin */
+        .option-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: white;
+            border-radius: 6px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+        
+        .option-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+        
+        .option-item i {
+            color: #3498db;
+        }
+        
         .drawing-area {
             flex-grow: 1;
             overflow: auto;
-            background-color: #fff;
+            background: radial-gradient(circle, #f5f7fa 0%, #c3cfe2 100%);
             position: relative;
             display: flex;
             justify-content: center;
             align-items: center;
+            padding: 20px;
         }
         
         #canvas {
             background-color: white;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
             cursor: crosshair;
             touch-action: none;
+            border-radius: 8px;
+            transition: transform 0.3s;
         }
         
-        /* Palette de couleurs */
+        #canvas:hover {
+            transform: scale(1.01);
+        }
+        
         .color-palette {
             display: flex;
-            gap: 8px;
+            gap: 10px;
             flex-wrap: wrap;
         }
         
-        /* Panneau de contrôle */
         .control-panel {
-            background-color: #34495e;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
             color: white;
-            padding: 10px 20px;
+            padding: 12px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
         }
         
         .action-btn {
-            background-color: #3498db;
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
             color: white;
             border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
+            padding: 10px 20px;
+            border-radius: 8px;
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 8px;
-            transition: all 0.2s;
+            gap: 10px;
+            transition: all 0.3s;
+            font-weight: 500;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
         }
         
         .action-btn:hover {
-            background-color: #2980b9;
-            transform: translateY(-2px);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        
+        .action-btn:active {
+            transform: translateY(-1px);
         }
         
         .action-btn.clear {
-            background-color: #e74c3c;
-        }
-        
-        .action-btn.clear:hover {
-            background-color: #c0392b;
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
         }
         
         .action-btn.save {
-            background-color: #2ecc71;
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
         }
         
-        .action-btn.save:hover {
-            background-color: #27ae60;
+        .action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
         
-        /* Indicateur d'état */
         .status-bar {
-            background-color: #2c3e50;
-            color: #bdc3c7;
-            padding: 8px 20px;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #ecf0f1;
+            padding: 10px 20px;
             font-size: 0.9rem;
             display: flex;
             justify-content: space-between;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
         }
         
-        /* Modale de téléchargement */
         .modal {
             display: none;
             position: fixed;
@@ -197,184 +272,280 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0,0,0,0.5);
+            background-color: rgba(0,0,0,0.7);
+            backdrop-filter: blur(5px);
             z-index: 100;
             justify-content: center;
             align-items: center;
+            animation: fadeIn 0.3s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
         
         .modal-content {
-            background-color: white;
-            padding: 25px;
-            border-radius: 8px;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
             width: 90%;
-            max-width: 400px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            max-width: 450px;
+            box-shadow: 0 10px 50px rgba(0,0,0,0.5);
+            animation: slideUp 0.3s;
+        }
+        
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
         }
         
         .modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #ecf0f1;
         }
         
         .modal-header h3 {
             color: #2c3e50;
+            font-size: 1.3rem;
         }
         
         .close-modal {
             background: none;
             border: none;
-            font-size: 1.5rem;
+            font-size: 1.8rem;
             cursor: pointer;
-            color: #7f8c8d;
+            color: #95a5a6;
+            transition: all 0.3s;
+        }
+        
+        .close-modal:hover {
+            color: #e74c3c;
+            transform: rotate(90deg);
         }
         
         .download-options {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 12px;
         }
         
         .download-btn {
-            padding: 12px;
-            background-color: #3498db;
+            padding: 15px;
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
             color: white;
             border: none;
-            border-radius: 4px;
+            border-radius: 8px;
             cursor: pointer;
             text-align: center;
-            transition: background-color 0.2s;
+            transition: all 0.3s;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
         
         .download-btn:hover {
-            background-color: #2980b9;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
         }
         
-        /* Responsive */
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+        }
+        
+        .slider {
+            width: 150px;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255,255,255,0.3);
+            outline: none;
+            cursor: pointer;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #1abc9c;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 10px rgba(26, 188, 156, 0.5);
+        }
+        
+        .layer-panel {
+            position: fixed;
+            right: -250px;
+            top: 0;
+            width: 250px;
+            height: 100vh;
+            background: rgba(44, 62, 80, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: -5px 0 15px rgba(0,0,0,0.3);
+            transition: right 0.3s;
+            z-index: 50;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .layer-panel.active {
+            right: 0;
+        }
+        
+        .toggle-layers {
+            position: fixed;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px 0 0 8px;
+            cursor: pointer;
+            z-index: 49;
+            transition: all 0.3s;
+        }
+        
+        .toggle-layers:hover {
+            transform: translateY(-50%) translateX(-5px);
+        }
+        
         @media (max-width: 768px) {
-            .toolbar {
+            .toolbar, .options-bar, .control-panel {
                 gap: 5px;
+                padding: 8px 10px;
             }
             
-            .tool-group {
-                padding: 5px;
-            }
-            
-            .tool-btn, .color-btn, .size-btn {
-                width: 35px;
-                height: 35px;
-            }
-            
-            #colorPicker {
-                width: 35px;
-                height: 35px;
+            .tool-btn, #colorPicker {
+                width: 38px;
+                height: 38px;
             }
             
             .action-btn span {
                 display: none;
             }
             
-            .action-btn {
-                padding: 8px;
+            .option-item strong {
+                font-size: 0.85rem;
             }
         }
     </style>
 </head>
 <body>
-    <!-- Barre de titre -->
     <div class="title-bar">
-        <h1><i class="fas fa-paint-brush"></i> Paint JavaScript</h1>
-        <div class="app-info">Devenez Yosuke Murata ou Kentaro Miura</div>
+        <h1><i class="fas fa-paint-brush"></i> Paint JavaScript Pro</h1>
+        <div class="app-info">
+            <i class="fas fa-palette"></i> Créez des œuvres d'art
+        </div>
     </div>
     
-    <!-- Barre d'outils principale -->
     <div class="toolbar">
-        <!-- Outils de dessin -->
         <div class="tool-group">
-            <button class="tool-btn active" id="brushTool" title="Pinceau">
+            <button class="tool-btn active" id="brushTool" title="Pinceau (B)">
                 <i class="fas fa-paint-brush"></i>
             </button>
-            <button class="tool-btn" id="lineTool" title="Ligne">
+            <button class="tool-btn" id="lineTool" title="Ligne (L)">
                 <i class="fas fa-slash"></i>
             </button>
-            <button class="tool-btn" id="rectangleTool" title="Rectangle">
+            <button class="tool-btn" id="rectangleTool" title="Rectangle (R)"></button>
                 <i class="far fa-square"></i>
             </button>
-            <button class="tool-btn" id="circleTool" title="Cercle">
+            <button class="tool-btn" id="circleTool" title="Cercle (C)">
                 <i class="far fa-circle"></i>
             </button>
-            <button class="tool-btn" id="eraserTool" title="Gomme">
+            <button class="tool-btn" id="eraserTool" title="Gomme (E)">
                 <i class="fas fa-eraser"></i>
             </button>
-        </div>
-        
-        <!-- Outils de sélection -->
-        <div class="tool-group">
-            <button class="tool-btn" id="selectTool" title="Sélection">
-                <i class="fas fa-mouse-pointer"></i>
-            </button>
-            <button class="tool-btn" id="fillTool" title="Remplissage">
+            <button class="tool-btn" id="fillTool" title="Remplissage (F)">
                 <i class="fas fa-fill-drip"></i>
             </button>
-            <button class="tool-btn" id="textTool" title="Texte">
-                <i class="fas fa-font"></i>
+            <button class="tool-btn" id="sprayTool" title="Aérosol (S)">
+                <i class="fas fa-spray-can"></i>
             </button>
         </div>
         
-        <!-- Sélecteur de couleurs -->
         <div class="tool-group">
             <div class="color-palette">
-                <button class="color-btn active" style="background-color: #000000;" data-color="#000000"></button>
-                <button class="color-btn" style="background-color: #ff0000;" data-color="#ff0000"></button>
-                <button class="color-btn" style="background-color: #00ff00;" data-color="#00ff00"></button>
-                <button class="color-btn" style="background-color: #0000ff;" data-color="#0000ff"></button>
-                <button class="color-btn" style="background-color: #ffff00;" data-color="#ffff00"></button>
-                <button class="color-btn" style="background-color: #ff00ff;" data-color="#ff00ff"></button>
-                <button class="color-btn" style="background-color: #00ffff;" data-color="#00ffff"></button>
-                <button class="color-btn" style="background-color: #ffffff;" data-color="#ffffff"></button>
+                <button class="color-btn active" style="background-color: #000000;" data-color="#000000" title="Noir"></button>
+                <button class="color-btn" style="background-color: #ff0000;" data-color="#ff0000" title="Rouge"></button>
+                <button class="color-btn" style="background-color: #00ff00;" data-color="#00ff00" title="Vert"></button>
+                <button class="color-btn" style="background-color: #0000ff;" data-color="#0000ff" title="Bleu"></button>
+                <button class="color-btn" style="background-color: #ffff00;" data-color="#ffff00" title="Jaune"></button>
+                <button class="color-btn" style="background-color: #ff00ff;" data-color="#ff00ff" title="Magenta"></button>
+                <button class="color-btn" style="background-color: #00ffff;" data-color="#00ffff" title="Cyan"></button>
+                <button class="color-btn" style="background-color: #ffffff;" data-color="#ffffff" title="Blanc"></button>
             </div>
-            <input type="color" id="colorPicker" value="#000000" title="Sélecteur de couleur">
+            <input type="color" id="colorPicker" value="#000000" title="Couleur personnalisée">
         </div>
         
-        <!-- Taille du pinceau -->
-        <div class="tool-group">
-            <span style="color: white; font-size: 0.9rem;">Taille:</span>
-            <button class="size-btn" data-size="2">2</button>
-            <button class="size-btn" data-size="5">5</button>
-            <button class="size-btn active" data-size="10">10</button>
-            <button class="size-btn" data-size="20">20</button>
+        <div class="tool-group slider-container">
+            <i class="fas fa-circle" style="font-size: 8px;"></i>
+            <input type="range" class="slider" id="sizeSlider" min="1" max="50" value="10">
+            <i class="fas fa-circle" style="font-size: 16px;"></i>
+            <span id="sizeValue">10px</span>
+        </div>
+        
+        <div class="tool-group slider-container">
+            <i class="fas fa-adjust"></i>
+            <input type="range" class="slider" id="opacitySlider" min="0" max="100" value="100">
+            <span id="opacityValue">100%</span>
         </div>
     </div>
     
-    <!-- Barre d'options -->
     <div class="options-bar">
-        <div id="currentTool">Outil actuel: <strong>Pinceau</strong></div>
-        <div id="currentColor">Couleur: <strong>Noir</strong></div>
-        <div id="currentSize">Taille: <strong>10px</strong></div>
+        <div class="option-item">
+            <i class="fas fa-tools"></i>
+            <div id="currentTool">Outil: <strong>Pinceau</strong></div>
+        </div>
+        <div class="option-item">
+            <i class="fas fa-palette"></i>
+            <div id="currentColor">Couleur: <strong>Noir</strong></div>
+        </div>
+        <div class="option-item">
+            <i class="fas fa-ruler"></i>
+            <div id="currentSize">Taille: <strong>10px</strong></div>
+        </div>
+        <div class="option-item">
+            <i class="fas fa-eye"></i>
+            <div id="currentOpacity">Opacité: <strong>100%</strong></div>
+        </div>
     </div>
     
-    <!-- Zone de dessin -->
     <div class="drawing-area">
-        <canvas id="canvas" width="800" height="500">
-            Votre navigateur ne supporte pas le canvas HTML5.
-        </canvas>
+        <canvas id="canvas" width="1000" height="600"></canvas>
     </div>
     
-    <!-- Panneau de contrôle -->
     <div class="control-panel">
         <div class="action-btn clear" id="clearCanvas">
             <i class="fas fa-trash-alt"></i>
-            <span>Effacer tout</span>
+            <span>Effacer</span>
         </div>
         
-        <div>
-            <button class="action-btn" id="undoBtn" title="Annuler">
+        <div style="display: flex; gap: 10px;">
+            <button class="action-btn" id="undoBtn" title="Annuler (Ctrl+Z)">
                 <i class="fas fa-undo"></i>
                 <span>Annuler</span>
             </button>
-            <button class="action-btn" id="redoBtn" title="Rétablir">
+            <button class="action-btn" id="redoBtn" title="Rétablir (Ctrl+Y)">
                 <i class="fas fa-redo"></i>
                 <span>Rétablir</span>
             </button>
@@ -386,298 +557,245 @@
         </div>
     </div>
     
-    <!-- Barre d'état -->
     <div class="status-bar">
-        <div id="cursorPos">Position: (0, 0)</div>
-        <div id="canvasSize">Taille: 800 × 500 px</div>
+        <div><i class="fas fa-mouse-pointer"></i> <span id="cursorPos">Position: (0, 0)</span></div>
+        <div><i class="fas fa-expand-arrows-alt"></i> <span id="canvasSize">Taille: 1000 × 600 px</span></div>
     </div>
     
-    <!-- Modale de téléchargement -->
     <div class="modal" id="downloadModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Enregistrer votre dessin</h3>
+                <h3><i class="fas fa-download"></i> Enregistrer votre dessin</h3>
                 <button class="close-modal" id="closeModal">&times;</button>
             </div>
             <div class="download-options">
-                <button class="download-btn" id="downloadPNG">Télécharger en PNG</button>
-                <button class="download-btn" id="downloadJPEG">Télécharger en JPEG</button>
-                <button class="download-btn" id="copyClipboard">Copier dans le presse-papier</button>
+                <button class="download-btn" id="downloadPNG">
+                    <i class="fas fa-file-image"></i> Télécharger en PNG
+                </button>
+                <button class="download-btn" id="downloadJPEG">
+                    <i class="fas fa-file-image"></i> Télécharger en JPEG
+                </button>
+                <button class="download-btn" id="copyClipboard">
+                    <i class="fas fa-clipboard"></i> Copier dans le presse-papier
+                </button>
             </div>
         </div>
     </div>
 
     <script>
-        // Éléments DOM principaux
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         const cursorPos = document.getElementById('cursorPos');
         const currentToolElement = document.getElementById('currentTool');
         const currentColorElement = document.getElementById('currentColor');
         const currentSizeElement = document.getElementById('currentSize');
+        const currentOpacityElement = document.getElementById('currentOpacity');
         const downloadModal = document.getElementById('downloadModal');
-        const closeModal = document.getElementById('closeModal');
+        const sizeSlider = document.getElementById('sizeSlider');
+        const sizeValue = document.getElementById('sizeValue');
+        const opacitySlider = document.getElementById('opacitySlider');
+        const opacityValue = document.getElementById('opacityValue');
         
-        // Variables d'état
         let isDrawing = false;
         let lastX = 0;
         let lastY = 0;
         let currentTool = 'brush';
         let currentColor = '#000000';
         let currentSize = 10;
+        let currentOpacity = 1;
         let history = [];
         let historyIndex = -1;
         let startX, startY;
         
-        // Palette de couleurs avec noms
         const colorNames = {
-            '#000000': 'Noir',
-            '#ff0000': 'Rouge',
-            '#00ff00': 'Vert',
-            '#0000ff': 'Bleu',
-            '#ffff00': 'Jaune',
-            '#ff00ff': 'Magenta',
-            '#00ffff': 'Cyan',
-            '#ffffff': 'Blanc'
+            '#000000': 'Noir', '#ff0000': 'Rouge', '#00ff00': 'Vert',
+            '#0000ff': 'Bleu', '#ffff00': 'Jaune', '#ff00ff': 'Magenta',
+            '#00ffff': 'Cyan', '#ffffff': 'Blanc'
         };
         
-        // Initialisation du canvas
         function initCanvas() {
-            // Fond blanc
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            // Sauvegarder l'état initial
             saveState();
-            
-            // Mettre à jour l'affichage
             updateStatus();
         }
         
-        // Sauvegarder l'état du canvas
         function saveState() {
-            // Si on a annulé des actions, supprimer les états futurs
             if (historyIndex < history.length - 1) {
                 history = history.slice(0, historyIndex + 1);
             }
-            
-            // Sauvegarder l'image actuelle
             history.push(canvas.toDataURL());
             historyIndex++;
-            
-            // Limiter l'historique à 20 états
-            if (history.length > 20) {
+            if (history.length > 30) {
                 history.shift();
                 historyIndex--;
             }
-            
             updateUndoRedoButtons();
         }
         
-        // Annuler
         function undo() {
             if (historyIndex > 0) {
                 historyIndex--;
-                const img = new Image();
-                img.onload = () => {
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    ctx.drawImage(img, 0, 0);
-                };
-                img.src = history[historyIndex];
-                updateUndoRedoButtons();
+                restoreState();
             }
         }
         
-        // Rétablir
         function redo() {
             if (historyIndex < history.length - 1) {
                 historyIndex++;
-                const img = new Image();
-                img.onload = () => {
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    ctx.drawImage(img, 0, 0);
-                };
-                img.src = history[historyIndex];
-                updateUndoRedoButtons();
+                restoreState();
             }
         }
         
-        // Mettre à jour les boutons annuler/rétablir
-        function updateUndoRedoButtons() {
-            const undoBtn = document.getElementById('undoBtn');
-            const redoBtn = document.getElementById('redoBtn');
-            
-            undoBtn.disabled = historyIndex <= 0;
-            redoBtn.disabled = historyIndex >= history.length - 1;
-            
-            undoBtn.style.opacity = undoBtn.disabled ? '0.5' : '1';
-            redoBtn.style.opacity = redoBtn.disabled ? '0.5' : '1';
+        function restoreState() {
+            const img = new Image();
+            img.onload = () => {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0);
+            };
+            img.src = history[historyIndex];
+            updateUndoRedoButtons();
         }
         
-        // Mettre à jour l'affichage des informations
+        function updateUndoRedoButtons() {
+            document.getElementById('undoBtn').disabled = historyIndex <= 0;
+            document.getElementById('redoBtn').disabled = historyIndex >= history.length - 1;
+        }
+        
         function updateStatus() {
             const colorName = colorNames[currentColor] || 'Personnalisé';
-            currentToolElement.innerHTML = `Outil actuel: <strong>${getToolName(currentTool)}</strong>`;
+            currentToolElement.innerHTML = `Outil: <strong>${getToolName(currentTool)}</strong>`;
             currentColorElement.innerHTML = `Couleur: <strong>${colorName}</strong>`;
             currentSizeElement.innerHTML = `Taille: <strong>${currentSize}px</strong>`;
+            currentOpacityElement.innerHTML = `Opacité: <strong>${Math.round(currentOpacity * 100)}%</strong>`;
         }
         
-        // Obtenir le nom de l'outil
         function getToolName(tool) {
-            const toolNames = {
-                'brush': 'Pinceau',
-                'line': 'Ligne',
-                'rectangle': 'Rectangle',
-                'circle': 'Cercle',
-                'eraser': 'Gomme',
-                'select': 'Sélection',
-                'fill': 'Remplissage',
-                'text': 'Texte'
+            const names = {
+                'brush': 'Pinceau', 'line': 'Ligne', 'rectangle': 'Rectangle',
+                'circle': 'Cercle', 'eraser': 'Gomme', 'fill': 'Remplissage',
+                'spray': 'Aérosol'
             };
-            return toolNames[tool] || 'Inconnu';
+            return names[tool] || 'Inconnu';
         }
         
-        // Dessiner avec le pinceau
-        function drawBrush(x, y) {
+        function setContext() {
+            ctx.globalAlpha = currentOpacity;
             ctx.lineWidth = currentSize;
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
             ctx.strokeStyle = currentColor;
-            
+        }
+        
+        function drawBrush(x, y) {
+            setContext();
             ctx.beginPath();
             ctx.moveTo(lastX, lastY);
             ctx.lineTo(x, y);
             ctx.stroke();
-            
             [lastX, lastY] = [x, y];
         }
         
-        // Dessiner une ligne
+        function drawSpray(x, y) {
+            setContext();
+            const density = 20;
+            for (let i = 0; i < density; i++) {
+                const offsetX = (Math.random() - 0.5) * currentSize * 2;
+                const offsetY = (Math.random() - 0.5) * currentSize * 2;
+                ctx.fillRect(x + offsetX, y + offsetY, 1, 1);
+            }
+        }
+        
         function drawLine(x, y) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
             if (historyIndex >= 0) {
                 const img = new Image();
                 img.src = history[historyIndex];
                 ctx.drawImage(img, 0, 0);
             }
-            
-            ctx.lineWidth = currentSize;
-            ctx.strokeStyle = currentColor;
+            setContext();
             ctx.beginPath();
             ctx.moveTo(startX, startY);
             ctx.lineTo(x, y);
             ctx.stroke();
         }
         
-        // Dessiner un rectangle
         function drawRectangle(x, y) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
             if (historyIndex >= 0) {
                 const img = new Image();
                 img.src = history[historyIndex];
                 ctx.drawImage(img, 0, 0);
             }
-            
-            ctx.lineWidth = currentSize;
-            ctx.strokeStyle = currentColor;
-            const width = x - startX;
-            const height = y - startY;
-            
-            ctx.beginPath();
-            ctx.rect(startX, startY, width, height);
-            ctx.stroke();
+            setContext();
+            ctx.strokeRect(startX, startY, x - startX, y - startY);
         }
         
-        // Dessiner un cercle
         function drawCircle(x, y) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
             if (historyIndex >= 0) {
                 const img = new Image();
                 img.src = history[historyIndex];
                 ctx.drawImage(img, 0, 0);
             }
-            
-            ctx.lineWidth = currentSize;
-            ctx.strokeStyle = currentColor;
+            setContext();
             const radius = Math.sqrt(Math.pow(x - startX, 2) + Math.pow(y - startY, 2));
-            
             ctx.beginPath();
             ctx.arc(startX, startY, radius, 0, Math.PI * 2);
             ctx.stroke();
         }
         
-        // Utiliser la gomme
         function drawEraser(x, y) {
+            ctx.globalAlpha = 1;
             ctx.lineWidth = currentSize;
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
             ctx.strokeStyle = '#ffffff';
-            
             ctx.beginPath();
             ctx.moveTo(lastX, lastY);
             ctx.lineTo(x, y);
             ctx.stroke();
-            
             [lastX, lastY] = [x, y];
         }
         
-        // Remplir une zone
         function fillArea(x, y) {
-            // Obtenir les données d'image du canvas
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            const pixelStack = [[x, y]];
             const targetColor = getPixelColor(imageData, x, y);
             const fillColor = hexToRgb(currentColor);
             
             if (colorsMatch(targetColor, fillColor)) return;
             
-            while (pixelStack.length) {
-                const [newX, newY] = pixelStack.pop();
+            const stack = [[x, y]];
+            while (stack.length) {
+                const [px, py] = stack.pop();
+                if (px < 0 || px >= canvas.width || py < 0 || py >= canvas.height) continue;
                 
-                // Vérifier les limites
-                if (newX < 0 || newX >= canvas.width || newY < 0 || newY >= canvas.height) continue;
-                
-                const currentColor = getPixelColor(imageData, newX, newY);
-                
-                if (colorsMatch(currentColor, targetColor)) {
-                    setPixelColor(imageData, newX, newY, fillColor);
-                    
-                    // Ajouter les pixels voisins à la pile
-                    pixelStack.push([newX + 1, newY]);
-                    pixelStack.push([newX - 1, newY]);
-                    pixelStack.push([newX, newY + 1]);
-                    pixelStack.push([newX, newY - 1]);
+                const currentPixel = getPixelColor(imageData, px, py);
+                if (colorsMatch(currentPixel, targetColor)) {
+                    setPixelColor(imageData, px, py, fillColor);
+                    stack.push([px + 1, py], [px - 1, py], [px, py + 1], [px, py - 1]);
                 }
             }
-            
             ctx.putImageData(imageData, 0, 0);
             saveState();
         }
         
-        // Obtenir la couleur d'un pixel
         function getPixelColor(imageData, x, y) {
-            const index = (y * imageData.width + x) * 4;
+            const i = (y * imageData.width + x) * 4;
             return {
-                r: imageData.data[index],
-                g: imageData.data[index + 1],
-                b: imageData.data[index + 2],
-                a: imageData.data[index + 3]
+                r: imageData.data[i],
+                g: imageData.data[i + 1],
+                b: imageData.data[i + 2],
+                a: imageData.data[i + 3]
             };
         }
         
-        // Définir la couleur d'un pixel
         function setPixelColor(imageData, x, y, color) {
-            const index = (y * imageData.width + x) * 4;
-            imageData.data[index] = color.r;
-            imageData.data[index + 1] = color.g;
-            imageData.data[index + 2] = color.b;
-            imageData.data[index + 3] = color.a || 255;
+            const i = (y * imageData.width + x) * 4;
+            imageData.data[i] = color.r;
+            imageData.data[i + 1] = color.g;
+            imageData.data[i + 2] = color.b;
+            imageData.data[i + 3] = color.a || 255;
         }
         
-        // Convertir une couleur hex en RGB
         function hexToRgb(hex) {
             const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
             return result ? {
@@ -687,259 +805,164 @@
             } : {r: 0, g: 0, b: 0};
         }
         
-        // Comparer deux couleurs
-        function colorsMatch(color1, color2) {
-            return color1.r === color2.r && 
-                   color1.g === color2.g && 
-                   color1.b === color2.b && 
-                   color1.a === color2.a;
+        function colorsMatch(c1, c2) {
+            return c1.r === c2.r && c1.g === c2.g && c1.b === c2.b && c1.a === c2.a;
         }
         
-        // Gestionnaires d'événements de souris
-        canvas.addEventListener('mousedown', (e) => {
+        function getCanvasCoords(e) {
             const rect = canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            
+            const clientX = e.clientX || e.touches[0].clientX;
+            const clientY = e.clientY || e.touches[0].clientY;
+            return {
+                x: clientX - rect.left,
+                y: clientY - rect.top
+            };
+        }
+        
+        function startDrawing(e) {
+            e.preventDefault();
+            const {x, y} = getCanvasCoords(e);
             isDrawing = true;
-            [lastX, lastY] = [x, y];
-            [startX, startY] = [x, y];
+            [lastX, lastY, startX, startY] = [x, y, x, y];
             
             if (currentTool === 'fill') {
-                fillArea(x, y);
+                fillArea(Math.floor(x), Math.floor(y));
                 isDrawing = false;
+            } else if (currentTool === 'brush' || currentTool === 'eraser') {
+                saveState();
             }
-        });
+        }
         
-        canvas.addEventListener('mousemove', (e) => {
-            const rect = canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            
-            // Mettre à jour la position du curseur
+        function draw(e) {
+            e.preventDefault();
+            const {x, y} = getCanvasCoords(e);
             cursorPos.textContent = `Position: (${Math.round(x)}, ${Math.round(y)})`;
             
             if (!isDrawing) return;
             
             switch (currentTool) {
-                case 'brush':
-                    drawBrush(x, y);
-                    break;
-                case 'line':
-                    drawLine(x, y);
-                    break;
-                case 'rectangle':
-                    drawRectangle(x, y);
-                    break;
-                case 'circle':
-                    drawCircle(x, y);
-                    break;
-                case 'eraser':
-                    drawEraser(x, y);
-                    break;
+                case 'brush': drawBrush(x, y); break;
+                case 'spray': drawSpray(x, y); break;
+                case 'line': drawLine(x, y); break;
+                case 'rectangle': drawRectangle(x, y); break;
+                case 'circle': drawCircle(x, y); break;
+                case 'eraser': drawEraser(x, y); break;
             }
-        });
+        }
         
-        canvas.addEventListener('mouseup', () => {
+        function stopDrawing() {
             if (!isDrawing) return;
-            
             isDrawing = false;
-            
-            // Pour les outils qui dessinent pendant le déplacement, sauvegarder à la fin
             if (['line', 'rectangle', 'circle'].includes(currentTool)) {
                 saveState();
             }
-        });
+        }
         
-        canvas.addEventListener('mouseout', () => {
-            isDrawing = false;
-        });
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseout', stopDrawing);
+        canvas.addEventListener('touchstart', startDrawing);
+        canvas.addEventListener('touchmove', draw);
+        canvas.addEventListener('touchend', stopDrawing);
         
-        // Gestionnaires d'événements tactiles pour mobile
-        canvas.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            const rect = canvas.getBoundingClientRect();
-            const touch = e.touches[0];
-            const x = touch.clientX - rect.left;
-            const y = touch.clientY - rect.top;
-            
-            isDrawing = true;
-            [lastX, lastY] = [x, y];
-            [startX, startY] = [x, y];
-            
-            if (currentTool === 'fill') {
-                fillArea(x, y);
-                isDrawing = false;
-            }
-        });
-        
-        canvas.addEventListener('touchmove', (e) => {
-            e.preventDefault();
-            const rect = canvas.getBoundingClientRect();
-            const touch = e.touches[0];
-            const x = touch.clientX - rect.left;
-            const y = touch.clientY - rect.top;
-            
-            if (!isDrawing) return;
-            
-            switch (currentTool) {
-                case 'brush':
-                    drawBrush(x, y);
-                    break;
-                case 'line':
-                    drawLine(x, y);
-                    break;
-                case 'rectangle':
-                    drawRectangle(x, y);
-                    break;
-                case 'circle':
-                    drawCircle(x, y);
-                    break;
-                case 'eraser':
-                    drawEraser(x, y);
-                    break;
-            }
-            
-            [lastX, lastY] = [x, y];
-        });
-        
-        canvas.addEventListener('touchend', (e) => {
-            e.preventDefault();
-            if (!isDrawing) return;
-            
-            isDrawing = false;
-            
-            // Pour les outils qui dessinent pendant le déplacement, sauvegarder à la fin
-            if (['line', 'rectangle', 'circle'].includes(currentTool)) {
-                saveState();
-            }
-        });
-        
-        // Gestion des outils
         document.querySelectorAll('.tool-btn').forEach(btn => {
             btn.addEventListener('click', () => {
-                // Désactiver tous les outils
                 document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
-                
-                // Activer l'outil cliqué
                 btn.classList.add('active');
-                
-                // Mettre à jour l'outil courant
                 currentTool = btn.id.replace('Tool', '');
-                
-                // Mettre à jour l'affichage
                 updateStatus();
             });
         });
         
-        // Gestion des couleurs
         document.querySelectorAll('.color-btn').forEach(btn => {
             btn.addEventListener('click', () => {
-                // Désactiver toutes les couleurs
                 document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
-                
-                // Activer la couleur cliquée
                 btn.classList.add('active');
-                
-                // Mettre à jour la couleur courante
                 currentColor = btn.dataset.color;
-                
-                // Mettre à jour le sélecteur de couleur
                 document.getElementById('colorPicker').value = currentColor;
-                
-                // Mettre à jour l'affichage
                 updateStatus();
             });
         });
         
-        // Sélecteur de couleur personnalisé
         document.getElementById('colorPicker').addEventListener('input', (e) => {
             currentColor = e.target.value;
-            
-            // Désactiver toutes les couleurs de la palette
             document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
-            
-            // Mettre à jour l'affichage
             updateStatus();
         });
         
-        // Gestion des tailles de pinceau
-        document.querySelectorAll('.size-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                // Désactiver toutes les tailles
-                document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
-                
-                // Activer la taille cliquée
-                btn.classList.add('active');
-                
-                // Mettre à jour la taille courante
-                currentSize = parseInt(btn.dataset.size);
-                
-                // Mettre à jour l'affichage
-                updateStatus();
-            });
+        sizeSlider.addEventListener('input', (e) => {
+            currentSize = parseInt(e.target.value);
+            sizeValue.textContent = `${currentSize}px`;
+            updateStatus();
         });
         
-        // Effacer le canvas
+        opacitySlider.addEventListener('input', (e) => {
+            currentOpacity = parseInt(e.target.value) / 100;
+            opacityValue.textContent = `${e.target.value}%`;
+            updateStatus();
+        });
+        
         document.getElementById('clearCanvas').addEventListener('click', () => {
             if (confirm('Voulez-vous vraiment effacer tout le dessin ?')) {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
                 ctx.fillStyle = '#ffffff';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                 saveState();
             }
         });
         
-        // Annuler/Rétablir
         document.getElementById('undoBtn').addEventListener('click', undo);
         document.getElementById('redoBtn').addEventListener('click', redo);
         
-        // Enregistrer le dessin
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'z') { e.preventDefault(); undo(); }
+            if (e.ctrlKey && e.key === 'y') { e.preventDefault(); redo(); }
+            if (e.key === 'b') currentTool = 'brush';
+            if (e.key === 'e') currentTool = 'eraser';
+            if (e.key === 'l') currentTool = 'line';
+            if (e.key === 'r') currentTool = 'rectangle';
+            if (e.key === 'c') currentTool = 'circle';
+            if (e.key === 'f') currentTool = 'fill';
+            if (e.key === 's') currentTool = 'spray';
+        });
+        
         document.getElementById('saveBtn').addEventListener('click', () => {
             downloadModal.style.display = 'flex';
         });
         
-        // Fermer la modale
-        closeModal.addEventListener('click', () => {
+        document.getElementById('closeModal').addEventListener('click', () => {
             downloadModal.style.display = 'none';
         });
         
-        // Fermer la modale en cliquant à l'extérieur
         window.addEventListener('click', (e) => {
-            if (e.target === downloadModal) {
-                downloadModal.style.display = 'none';
-            }
+            if (e.target === downloadModal) downloadModal.style.display = 'none';
         });
         
-        // Options de téléchargement
         document.getElementById('downloadPNG').addEventListener('click', () => {
             const link = document.createElement('a');
-            link.download = 'dessin-paint.png';
+            link.download = `dessin-${Date.now()}.png`;
             link.href = canvas.toDataURL('image/png');
             link.click();
         });
         
         document.getElementById('downloadJPEG').addEventListener('click', () => {
             const link = document.createElement('a');
-            link.download = 'dessin-paint.jpg';
+            link.download = `dessin-${Date.now()}.jpg`;
             link.href = canvas.toDataURL('image/jpeg', 0.9);
             link.click();
         });
         
         document.getElementById('copyClipboard').addEventListener('click', async () => {
             try {
-                // Copier le canvas dans le presse-papier
                 canvas.toBlob(async (blob) => {
-                    const item = new ClipboardItem({ 'image/png': blob });
-                    await navigator.clipboard.write([item]);
+                    await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
                     alert('Dessin copié dans le presse-papier !');
                 });
             } catch (err) {
-                alert('Impossible de copier dans le presse-papier. Votre navigateur ne supporte peut-être pas cette fonctionnalité.');
+                alert('Erreur lors de la copie dans le presse-papier.');
             }
         });
         
-        // Initialisation
         initCanvas();
     </script>
 </body>
